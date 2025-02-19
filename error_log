@@ -1,0 +1,2 @@
+[31-Jul-2024 13:27:52 UTC] PHP Fatal error:  Cannot redeclare Welcome::Test() in /home/o57r91zm5gc2/public_html/app.cdc-azamgarh.com/application/controllers/Welcome.php on line 1391
+[31-Jul-2024 13:30:15 UTC] PHP Fatal error:  Cannot redeclare Welcome::Test() in /home/o57r91zm5gc2/public_html/app.cdc-azamgarh.com/application/controllers/Welcome.php on line 1391

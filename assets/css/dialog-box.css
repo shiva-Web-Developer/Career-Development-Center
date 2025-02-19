@@ -1,0 +1,52 @@
+.av-box-container{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1110;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: table;
+    background: #dddddd9f;
+    background: #2d3541eb;
+}
+.av-box-row{
+    padding: 40px;
+    display: table-row;
+    width: 100%;
+    height: 100%;
+}
+.av-box-cell{
+    display: table-cell;
+    vertical-align: middle;
+}
+#av-form, #no-form, .help-content{
+    max-height: 86vh;
+    overflow: auto;
+}
+#av-form-div{
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #f57c00;
+}
+.av-box-cell>div{
+    padding: 0 0.6rem;
+}
+.av-box-content{
+    padding-bottom: 40px;
+}
+.form-rslt{
+    color: #1B5E20;
+}
+.close{
+    padding-top: 10px;
+    opacity: 0.6;
+    display: none;
+}
+@media screen and (min-width: 600px) {
+    .av-box-cell>div{
+        padding: 0 50px;
+    }
+}
