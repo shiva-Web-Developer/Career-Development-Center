@@ -324,7 +324,7 @@ function initiatePayment() {
                         success: function(saveResponse) {
                             if (saveResponse.status === "success") {
                                 alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
-                                window.location.href = base_url + "EventBooking";
+                                window.location.href = base_url + "EventDetails";
                             } else {
                                 alert("Payment recorded, but database update failed!");
                             }

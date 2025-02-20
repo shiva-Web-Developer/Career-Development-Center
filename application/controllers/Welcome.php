@@ -1665,6 +1665,14 @@ class Welcome extends CI_Controller
 		}
 	}
 
+	function EventDetails(){
+		$id = $_SESSION['UID'];
+		$data['title'] = THE_TITLE." - Event Details";
+		$data['page'] = "Event Details";
+		$data['content'] = $this->load->view('frontend/SeatBooking/event-detail',$data, true);
+		$this->load->view('frontend/common/page-builder',$data);
+	}
+
 
 
 
