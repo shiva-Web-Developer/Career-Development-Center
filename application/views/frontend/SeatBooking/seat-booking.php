@@ -29,6 +29,7 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
             overflow: hidden;
+            margin-bottom: 2rem;
         }
 
         h2 {
@@ -176,10 +177,14 @@
 
 <body>
     <div class="container">
+        <?php
+        $sql = "SELECT * FROM `event_list` WHERE is_Active = 1 AND id = $EventID";
+        $EventDetails = $this->Admin_model->getAllData($sql);
+        ?>
         <h2>Choose Seat</h2>
         <div class="seat-info">
             Available: <span id="available-seats"><?php echo $totalSeats - $BookedSeat ?></span> | Booked: <span id="selected-seats"><?php echo $BookedSeat ?></span>
-            <input type="text" value="<?php echo $planId ?>" id="planID" hidden>
+            <input type="text" value="<?php echo  $EventDetails[0]['id']; ?>" id="planID" hidden>
         </div>
         <div class="seat-map-wrapper">
             <div class="seat-grid" id="seat-map"></div>
@@ -196,19 +201,40 @@
                 <div class="legend-box sold"></div> Sold
             </div>
         </div>
+
+        <div id="paymentButton" style="display: none; margin-top: 20px;">
+            <button id="payButton" style="
+                background-color:#009900;
+                color: white;
+                border: none;
+                padding: 10px 110px;
+                font-size: 14px;
+                font-weight: bold;
+                border-radius: 8px;
+                max-width: 400px;
+                cursor: pointer;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            " onclick="initiatePayment()">
+                Pay Rs. <?php echo  $EventDetails[0]['fees']; ?>
+            </button>
+        </div>
+
+        </div>
+
         <div id="showMessage" class="alertMessage">✅ Added Successfully</div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const seatMap = document.getElementById('seat-map');
+            const paymentButton = document.getElementById("paymentButton");
             let seatData = <?= $seatData ?>;
             let bookedSeats = <?= $bookedSeats ?>;
             let selectedSeat = null;
-            let planId = <?= $planId ?>;
+            let planId = <?= $EventDetails[0]['id']; ?>;
+            let eventFees = <?= $EventDetails[0]['fees']; ?> * 100; // Convert to paise
 
             function createSeat(seatNumber, isEmpty = false) {
                 const seat = document.createElement('div');
@@ -222,82 +248,18 @@
                 } else {
                     seat.dataset.seatNumber = seatNumber;
                     seat.addEventListener('click', () => {
-                        // let availableSeat=$('#available-seats').text()-parseInt(1);
-                        //     $('#available-seats').text(availableSeat);
-                        //     let selectedSeats = parseInt($('#selected-seats').text(), 10) + 1;
-                        //     $('#selected-seats').text(selectedSeats);
                         if (!seat.classList.contains('booked')) {
                             if (selectedSeat) {
                                 selectedSeat.classList.remove('selected');
                             }
+
                             seat.classList.add('selected');
                             selectedSeat = seat;
-
-                            let selectedSeatNumber = seat.dataset.seatNumber;
-
-                            console.log("Selected seat number:", selectedSeatNumber);
-
-                            if (confirm(`You have selected seat: ${selectedSeatNumber}. Click OK to confirm.`)) {
-                                saveSeatToDB(selectedSeatNumber);
-                            } else {
-                                seat.classList.remove('selected');
-                                selectedSeat = null;
-                            }
+                            paymentButton.style.display = "block"; // ✅ Show the Pay button immediately
                         }
                     });
                 }
                 return seat;
-            }
-            let showAlert = false;
-
-            function showSuccessMessage() {
-                let messageBox = document.getElementById("showMessage");
-                messageBox.style.top = "4%"; // Show it on screen
-                messageBox.style.opacity = "1";
-
-                setTimeout(() => {
-                    messageBox.style.top = "-50px"; // Hide again after 3s
-                    messageBox.style.opacity = "0";
-                }, 1000);
-            }
-
-            function saveSeatToDB(selectedSeatNumber) {
-                // showAlert = true;
-
-                if (showAlert) {
-                    showSuccessMessage(); // Call the function to show the message
-                }
-
-                $.ajax({
-                    type: "POST",
-                    url: base_url + "SeatBooking/save",
-                    data: {
-                        "selectedSeatNumber": selectedSeatNumber,
-                        "planId": planId,
-                        csrf_token: csrf_value
-                    },
-                    success: function(response) {
-                        let res = JSON.parse(response);
-                        // showAlert = false;
-
-                        if (res.success) {
-                            showAlert = true;
-                            selectedSeat.classList.add('booked'); // ✅ Mark as booked
-                            selectedSeat.classList.remove('selected'); // ✅ Remove highlight
-                            selectedSeat = null;
-                        } else {
-                            alert(res.message); // ✅ Show error message
-                            selectedSeat.classList.remove('selected'); // ✅ Remove highlight
-                            selectedSeat = null;
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(status, error, xhr.responseText);
-                        alert("Something went wrong. Please try again.");
-                        selectedSeat.classList.remove('selected');
-                        selectedSeat = null;
-                    }
-                });
             }
 
             Object.keys(seatData).forEach(rowLabel => {
@@ -314,6 +276,86 @@
             });
         });
     </script>
+
+
+
+<!-- code test  -->
+
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var base_url = "<?= base_url(); ?>";
+var csrf_token = "<?= $this->security->get_csrf_hash(); ?>";
+
+function initiatePayment() {
+    let planID = document.getElementById("planID").value;
+    let amount = <?= $EventDetails[0]['fees']; ?> * 100;
+    $.ajax({
+        type: 'POST',
+        url: base_url + "getStudentDetails",
+        data: { csrf_token: csrf_token },
+        dataType: "json",
+        success: function(student) {
+            if (!student || student.error) {
+                alert("Failed to fetch student details.");
+                return;
+            }
+
+            let options = {
+                "key": "rzp_test_Hs4FpdUrKOz3v0",
+                "amount": amount,
+                "currency": "INR",
+                "name": "Career Development Center",
+                "description": "Seat Booking Payment",
+                "image": "your-logo-url.png",
+                "handler": function(response) {
+                    $.ajax({
+                        type: 'POST',
+                        url: base_url + "SavePayment",
+                        data: {
+                            eventId: planID,
+                            paymentId: response.razorpay_payment_id,
+                            amount: amount,
+                            status: "success",
+                            student_id: student.student_id,
+                            csrf_token: csrf_token
+                        },
+                        dataType: "json",
+                        success: function(saveResponse) {
+                            if (saveResponse.status === "success") {
+                                alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+                                window.location.href = base_url + "EventBooking";
+                            } else {
+                                alert("Payment recorded, but database update failed!");
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Database Save Error:", error);
+                            alert("Payment successful, but an error occurred while saving details.");
+                        }
+                    });
+                },
+                "prefill": {
+                    "name": student.name,
+                    "email": student.email,
+                    "contact": student.contact
+                },
+                "theme": { "color": "#009900" }
+            };
+
+            let rzp1 = new Razorpay(options);
+            rzp1.open();
+        },
+        error: function(xhr, status, error) {
+            console.error("Fetch Student Data Error:", error);
+            alert("Unable to retrieve student details.");
+        }
+    });
+}
+</script>
+
+
 </body>
+
 
 </html>

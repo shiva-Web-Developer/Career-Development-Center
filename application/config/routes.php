@@ -80,6 +80,10 @@ $route['saveTest'] = 'welcome/saveTest';
 
 // For the Seat Booking
 $route['EventBooking'] = 'welcome/EventBooking';
+$route['SavePayment'] = 'welcome/SavePayment';  // Define the route
+
+$route['getStudentDetails'] = 'welcome/getStudentDetails';
+
 
 $route['SeatBooking'] = 'welcome/seatbooking';
 $route['SeatBooking/save'] = 'Welcome/saveSeat'; // Route for saving seats

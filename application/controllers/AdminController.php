@@ -8,7 +8,7 @@ class AdminController extends CI_Controller {
 		$this->load->library('session');
 		$this->load->model('Admin');
 		$this->load->database();
-		
+
 		// $route=$this->router->fetch_method();
 		// print_r($route);
 			function wrapIntoHtml($msg){
@@ -18,7 +18,7 @@ class AdminController extends CI_Controller {
     	   </html>';
     	    return $htmlMsg;
     	}
-		
+
 	}
 	public function admin()
 	{
@@ -37,12 +37,12 @@ class AdminController extends CI_Controller {
 		{
 			redirect(base_url('admin'));
 		}
-		
+
 		$sql8 = "SELECT DATE(DATE) AS created_date, COUNT(*) AS count_users FROM users GROUP BY created_date";
 
 		$data['allus'] = $this->Admin->getData($sql8);
-		
-		
+
+
 		$data['title']="Dashboard";
 		$sql="SELECT * FROM `users`";
 		$data['user']=$this->Admin->getData($sql);
@@ -51,15 +51,15 @@ class AdminController extends CI_Controller {
 		$sql3="SELECT COUNT(id) AS COUNTID, GENDER FROM `users` GROUP BY GENDER;";
 		$data['genderwise']=$this->Admin->getData($sql3);
 
-	    $sql4 = "SELECT COUNT(id) AS COUNTID, CLASS FROM `users` GROUP BY CLASS ORDER BY 
+	    $sql4 = "SELECT COUNT(id) AS COUNTID, CLASS FROM `users` GROUP BY CLASS ORDER BY
         CASE WHEN CLASS REGEXP '^[0-9]' THEN CAST(CLASS AS UNSIGNED) ELSE 9999 END, CLASS ASC";
 
         $data['classwise'] = $this->Admin->getData($sql4);
 
-		
+
 		$sql5="SELECT DOB FROM `users`";
 		$data['agewige']=$this->Admin->getData($sql5);
-		
+
         $sql6 = "SELECT * FROM enroll_course";
         $enrollc = $this->Admin->getData($sql6);
         $data['enrolledcourse'] = COUNT($enrollc);
@@ -92,7 +92,7 @@ class AdminController extends CI_Controller {
 	}
 	public function SendMessage()
 	{
-		
+
 		$data['title']="Send-Message";
 		$sql="SELECT * FROM `users`";
 		$data['user']=$this->Admin->getData($sql);
@@ -227,7 +227,7 @@ class AdminController extends CI_Controller {
 		$this->load->view('admin/ViewBlogs',$data);
 		$this->load->view('admin/common/footer');
 	}
-	
+
 		function ViewCourses()
 	{
 		if(isset($_SESSION['EMAIL'])==false)
@@ -240,8 +240,8 @@ class AdminController extends CI_Controller {
 		$this->load->view('admin/ViewCourses',$data);
 		$this->load->view('admin/common/footer');
 	}
-	
-	
+
+
 	function EnrolledCourses()
 	{
 		if(isset($_SESSION['EMAIL'])==false)
@@ -251,7 +251,7 @@ class AdminController extends CI_Controller {
 		$data['title']="Enrolled Courses";
 // 		$sql="SELECT * FROM `enroll_course`";
 // 		$sql = "SELECT ec.*, c.course_id FROM test_tbl ec INNER JOIN enroll_course c ON ec.id = c.course_id";
-		
+
 // 		SELECT ec.*, c.course_id, u.student_name
 // FROM test_tbl ec
 // INNER JOIN enroll_course c ON ec.id = c.course_id
@@ -286,8 +286,8 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		$this->load->view('admin/viewTestimonial',$data);
 		$this->load->view('admin/common/footer');
 	}
-	
-	
+
+
 	function AccessLogin()
 	{
 
@@ -296,26 +296,26 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		$sql="SELECT * FROM `admin` WHERE EMAIL='".$user_email."'";
 		$result=$this->Admin->getData($sql);
 		if(count($result) > 0)
-		{    
+		{
 			foreach($result as $row)
 			{   $_SESSION['EMAIL']= $row->EMAIL;
 			 $_SESSION['UID']= $row->ID;
-			 
+
 			     $_SESSION['NAME']= $row->NAME;
 			    $_SESSION['img']= $row->USER_PROFILE;
 				$pass=$row->KUNJI;
 				if(password_verify($user_password,$pass))
 				{ echo 1;
-					
+
 				}else{
 					echo 2;
 				}
 			}
 		}
 		else{
-				echo 3; 
+				echo 3;
 		}
-		
+
 	}
 	function ForgetEmail()
 	{
@@ -331,7 +331,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 				echo 2;
 		}
 	}
-	
+
 	function deleteRecord()
 	{
 		$tbl=$_REQUEST['tbl'];
@@ -340,7 +340,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		$sql="DELETE FROM `$tbl` WHERE $where=$id";
 		$result=$this->Admin->deleteData($sql);
 		if($result)
-			{   
+			{
 				  echo 1;
 			}else{
 					echo 2;
@@ -442,7 +442,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		$userMobile=$_REQUEST['mobile'];
 // 	echo 	$userKunji=$_REQUEST['kunji'];
 // 	exit();
-		
+
 		$sql="UPDATE `admin` SET NAME='$userName', EMAIL='$userEmail', PHONE='$userMobile' WHERE ID=$userId";
 		$results=$this->Admin->updateData($sql);
 		if($results)
@@ -452,20 +452,20 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 			echo 2;
 		}
 	}
-	
-	
+
+
 	function SaveProduct()
 	{
-			$config['upload_path']   = './assets/img/product/'; 
-			$config['allowed_types'] = 'jpg|png|jpeg'; 
-			$config['max_size']      = 1024; 
+			$config['upload_path']   = './assets/img/product/';
+			$config['allowed_types'] = 'jpg|png|jpeg';
+			$config['max_size']      = 1024;
 			$this->load->library('upload', $config);
 			if ( ! $this->upload->do_upload('userfile')) {
 				$error = $this->upload->display_errors();
-				$this->session->set_flashdata('error',strip_tags($error));	
+				$this->session->set_flashdata('error',strip_tags($error));
 				redirect(base_url().'Add-Products');
-			}   
-			else { 
+			}
+			else {
 				$data1 =$this->upload->data();
 				$filename=$data1['file_name'];
 				$data=array(
@@ -480,22 +480,22 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 				$this->session->set_flashdata('product', 'Product Added Successfully');
 				redirect(base_url().'Add-Products');
 			}
-		
+
 	}
-	
-	
+
+
 	function SaveTestimonial()
 	{
-			$config['upload_path']   = './assets/img/testimonial/'; 
-			$config['allowed_types'] = 'jpg|png|jpeg'; 
-			$config['max_size']      = 1024; 
+			$config['upload_path']   = './assets/img/testimonial/';
+			$config['allowed_types'] = 'jpg|png|jpeg';
+			$config['max_size']      = 1024;
 			$this->load->library('upload', $config);
 			if ( ! $this->upload->do_upload('userfile')) {
 				$error = $this->upload->display_errors();
-				$this->session->set_flashdata('error',strip_tags($error));	
+				$this->session->set_flashdata('error',strip_tags($error));
 				redirect(base_url().'Testimonial');
-			}   
-			else { 
+			}
+			else {
 				$data1 =$this->upload->data();
 				$filename=$data1['file_name'];
 				$data=array(
@@ -508,20 +508,20 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 				$this->session->set_flashdata('testimonial', 'Testimonial Added Successfully');
 				redirect(base_url().'Testimonial');
 			}
-		
+
 	}
 	function SaveBlog()
 	{
-			$config['upload_path']   = './assets/img/blog/'; 
-			$config['allowed_types'] = 'jpg|png|jpeg'; 
-			$config['max_size']      = 1024; 
+			$config['upload_path']   = './assets/img/blog/';
+			$config['allowed_types'] = 'jpg|png|jpeg';
+			$config['max_size']      = 1024;
 			$this->load->library('upload', $config);
 			if ( ! $this->upload->do_upload('userfile')) {
 				$error = $this->upload->display_errors();
-				$this->session->set_flashdata('error',strip_tags($error));	
+				$this->session->set_flashdata('error',strip_tags($error));
 				redirect(base_url().'Our-Blogs');
-			}   
-			else { 
+			}
+			else {
 				$data1 =$this->upload->data();
 				$filename=$data1['file_name'];
 				$data=array(
@@ -534,20 +534,20 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 				$this->session->set_flashdata('Blogs', 'Blogs Added Successfully');
 				redirect(base_url().'Our-Blogs');
 			}
-		
+
 	}
 	function UploadImage()
 	{
-			$config['upload_path']   = './assetstunch/dist/img/profile/'; 
-			$config['allowed_types'] = 'gif|jpg|png|jpeg|webp|JFIF'; 
-			$config['max_size']      = 4024; 
+			$config['upload_path']   = './assetstunch/dist/img/profile/';
+			$config['allowed_types'] = 'gif|jpg|png|jpeg|webp|JFIF';
+			$config['max_size']      = 4024;
 			$this->load->library('upload', $config);
 			if ( ! $this->upload->do_upload('userfile')) {
 				$error = $this->upload->display_errors();
-				$this->session->set_flashdata('error',strip_tags($error));	
+				$this->session->set_flashdata('error',strip_tags($error));
 				redirect(base_url().'Profile');
-			}   
-			else { 
+			}
+			else {
 				$email=$_SESSION['EMAIL'];
 				$data1 =$this->upload->data();
 				$filename=$data1['file_name'];
@@ -558,7 +558,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 				$this->session->set_flashdata('Profile', 'Profile Updated Successfully');
 				redirect(base_url().'Profile');
 			}
-		
+
 	}
 
 
@@ -587,7 +587,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
             date_sub($date2, date_interval_create_from_date_string("$min Years"));
             $dt2 = date_format($date2, "Y-m-d");
           $filter .= " AND `DOB` BETWEEN '" . $dt1 . "' AND '" . $dt2 . "'";
-        } 
+        }
 
     if (isset($_REQUEST['gender_group'])) {
         if($_REQUEST['gender_group'] != '')
@@ -602,7 +602,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
              $filter .= " AND CLASS LIKE '" . $_REQUEST['class_group'] . "'";
         }
     }
-    
+
     if (isset($_REQUEST['city'])) {
         if($_REQUEST['city'] != '')
         {
@@ -625,13 +625,13 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		$this->load->view('admin/job/add-job',$data);
 		$this->load->view('admin/common/footer');
 	}
-	
-	
-	
-	
+
+
+
+
 		function savejob()
 	{
-		
+
 				$data=array(
 					'job_title'=>$this->input->post('job_title'),
 					'min_age'=>$this->input->post('min_age'),
@@ -643,15 +643,15 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 					'url'=>$this->input->post('url'),
 					'description'=>$this->input->post('description')
 				);
-				
+
 				$tbl= 'latest_jobs';
 				$this->Admin->saveData($tbl,$data);
 				$this->session->set_flashdata('job', 'Job Added Successfully');
 				redirect(base_url().'addjob');
-			
-		
+
+
 	}
-	
+
 
 	public function joblist()
 	{
@@ -668,7 +668,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 
 
 	function GetAllEmail()
-	{	
+	{
 		$sql="SELECT * FROM `users`";
 		$result=$this->Admin->getData($sql);
 		echo json_encode($result);
@@ -686,18 +686,18 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 			$config['charset']    = 'utf-8';
 			$config['newline']    = "\r\n";
 			$config['mailtype'] = 'html'; // or html
-			$config['validation'] = TRUE; // bool whether to validate email or not      
+			$config['validation'] = TRUE; // bool whether to validate email or not
 		   $this->email->initialize($config);
 		   $msg = wrapIntoHtml($_REQUEST['msg']);
 		if($_REQUEST['FilterType']=='All')
 		{
 			$email= $_REQUEST['alluseremail'];
 			$nameArray = explode(",", $email);
-		
-		   $msg=$_REQUEST['msg'];  
+
+		   $msg=$_REQUEST['msg'];
 		   foreach ($nameArray as $value) {
 				$this->email->from('noreply@cdc-azamgarh.com', 'Career Developement Center');
-				$this->email->to($value); 
+				$this->email->to($value);
 				$this->email->subject($_REQUEST['subject']);
 				$this->email->message($msg);
 				if($this->email->send())
@@ -708,7 +708,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 					$data['send_by'] = $_SESSION['UID'];
 					$data['date'] = date('Y-m-d H:i:s');
 					$res = $this->Admin->saveData('email_log', $data);
-				
+
 				}
 		    }
 		   	echo '"send email"';
@@ -716,13 +716,13 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		}
 		else if($_REQUEST['FilterType']=='Individual')
 		{
-			    
-		  
+
+
 		   $this->email->from('noreply@cdc-azamgarh.com', 'Career Developement Center');
-		   $this->email->to($_REQUEST['single_email'] ); 
+		   $this->email->to($_REQUEST['single_email'] );
 		   $this->email->subject($_REQUEST['subject']);
-		   $this->email->message($msg);  
-		   
+		   $this->email->message($msg);
+
 		   if($this->email->send())
 		   {
 		        $data['email'] = $_REQUEST['single_email'];
@@ -730,22 +730,22 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 				$data['subject'] = $_REQUEST['subject'];
 				$data['send_by'] = $_SESSION['UID'];
 				$data['date'] = date('Y-m-d H:i:s');
-				
+
 		        $res = $this->Admin->saveData('email_log', $data);
 				echo '"send email"';
 		   }
-		   
+
 		}else if($_REQUEST['FilterType']=='Selected')
 		{
 			$email= $_REQUEST['selectedemail'];
 			$nameArray = explode(",", $email);
-		
+
 		   foreach ($nameArray as $value) {
-		       
+
 				$this->email->from('noreply@cdc-azamgarh.com', 'Career Developement Center');
-				$this->email->to($value); 
+				$this->email->to($value);
 				$this->email->subject($_REQUEST['subject']);
-				$this->email->message($msg); 
+				$this->email->message($msg);
 				if($this->email->send())
 				{
 				    $data['email'] = $value;
@@ -753,18 +753,18 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 					$data['subject'] = $_REQUEST['subject'];
 					$data['send_by'] = $_SESSION['UID'];
 					$data['date'] = date('Y-m-d H:i:s');
-					
+
 			        $res = $this->Admin->saveData('email_log', $data);
-				
+
 				}
 		    }
 		    	echo '"send email"';
-		   
+
 		}
-		
+
 	}
-	
-	
+
+
 		public function SendSMSSchedule()
 	{
 		// GET THE AGE/CUISINE/DIETARY FROM LOGIN HELPER
@@ -864,7 +864,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 			redirect(base_url() . 'Send-sms-schedule');
 		}
 	}
-	
+
 		function PushNotification()
 	{
 		$data['title'] = "Push Notification";
@@ -874,7 +874,7 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		$this->load->view('admin/notification-log/push-notification', $data);
 		$this->load->view('admin/common/footer');
 	}
-	
+
 	function EmailNotification()
 	{
 		$data['title'] = "Email Notification";
@@ -884,8 +884,8 @@ $sql = "SELECT ec.*, c.course_id, u.name FROM test_tbl ec INNER JOIN enroll_cour
 		$this->load->view('admin/notification-log/email-notification', $data);
 		$this->load->view('admin/common/footer');
 	}
-	
-	
-	
-	
+
+
+
+
 }

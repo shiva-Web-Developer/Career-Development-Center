@@ -1,6 +1,9 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use Razorpay\Api\Api;
+
+
 class Welcome extends CI_Controller
 {
 	public function __construct()
@@ -14,6 +17,8 @@ class Welcome extends CI_Controller
 		$this->load->model('Admin_model');
 		$this->load->library('session');
 		$this->load->database();
+
+		require_once(APPPATH . 'libraries/Razorpay/Api.php');
 
 		// $this->load->library('google_client');
 
@@ -1474,6 +1479,7 @@ class Welcome extends CI_Controller
 		$data['title'] = THE_TITLE." - Event Booking";
 		$data['page'] = "Event Booking";
 		$sql = "SELECT * FROM `event_list` ";
+		$today = date("Y-m-d");
 		$data['EventList'] =  $this->Admin_model->getAllData($sql);
 		$data['content'] = $this->load->view('frontend/SeatBooking/event-list',$data, true);
 		$this->load->view('frontend/common/page-builder',$data);
@@ -1482,12 +1488,20 @@ class Welcome extends CI_Controller
 	// Seat Booking
 	public function seatbooking()
 	{
+		if (isset($_GET['id'])) {
+			$eventId = $_GET['id'];
+		}else{
+			return;
+		}
+
 		$data['title'] = THE_TITLE . " - Seat Booking";
 		$data['page'] = 'seat-booking';
 
 		// Fetch seating plans from database
-		$sql = "SELECT * FROM `seating_plans` WHERE is_ative = 1 LIMIT 1";
+		$sql = "SELECT * FROM `seating_plans` WHERE is_ative = 1 AND event_id = $eventId";
 		$seating_plans = $this->Admin_model->getAllData($sql);
+
+		$data['EventID'] = $eventId;
 
 		if (!empty($seating_plans)) {
 			$data['planId'] = $seating_plans[0]['id']; // ✅ Use index 0 since it's an array of rows
@@ -1496,7 +1510,7 @@ class Welcome extends CI_Controller
 			return;
 		}
 
-		$sql = "SELECT seat_id FROM `saved_seats` WHERE aud_id = " . intval($data['planId']); // Prevent SQL Injection
+		$sql = "SELECT seat_id FROM `saved_seats` WHERE event_id = $eventId"; // Prevent SQL Injection
 		$bookedSeatsData = $this->Admin_model->getAllData($sql);
 
 		// Convert database result into an array of seat IDs
@@ -1548,6 +1562,64 @@ class Welcome extends CI_Controller
 		$this->load->view('frontend/common/page-builder', $data);
 	}
 
+	public function SavePayment()
+	{
+		header('Content-Type: application/json');
+
+		$this->load->helper('url');
+		$this->load->database();
+
+		$postData = $this->input->post();
+
+		if (!$postData || !isset($postData['eventId']) || !isset($postData['paymentId']) || !isset($postData['amount']) || !isset($postData['student_id'])) {
+			echo json_encode(["status" => "error", "message" => "Invalid payment data"]);
+			exit;
+		}
+
+		$data = [
+			'event_id' => $postData['eventId'],
+			'payment_id' => $postData['paymentId'],
+			'student_id' => $postData['student_id'],
+			'amount' => $postData['amount'] / 100, // Convert back to INR
+			'status' => "Success",
+			'created_at' => date('Y-m-d H:i:s')
+		];
+		$insert = $this->Admin_model->saveData('payments', $data);
+
+		if ($insert) {
+			echo json_encode(["status" => "success"]);
+		} else {
+			echo json_encode(["status" => "error", "message" => "Database save failed"]);
+		}
+	}
+
+	public function getStudentDetails()
+	{
+		header('Content-Type: application/json');
+		$this->load->database();
+		$this->load->library('session');
+
+		$student_id = $_SESSION['UID'];
+
+		if (!$student_id) {
+			echo json_encode(["error" => "User not logged in"]);
+			exit;
+		}
+
+		$query = $this->db->get_where('users', ['id' => $student_id]);
+		$student = $query->row_array();
+
+		if ($student) {
+			echo json_encode([
+				"student_id" => $student['id'],
+				"name" => $student['NAME'],
+				"email" => $student['EMAIL'],
+				"contact" => $student['MOB']
+			]);
+		} else {
+			echo json_encode(["error" => "Student not found"]);
+		}
+	}
 
 	public function saveSeat() {
 		$user_id = $_SESSION['UID'];

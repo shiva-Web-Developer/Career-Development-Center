@@ -143,70 +143,6 @@
         background-color: white;
     }
 </style>
-<main>
-
-    <?php $this->load->view('frontend/first-visit'); ?>
-    <section id="home-header">
-        <div class="flex flex-row space-between flex-column">
-            <div class="">
-                <svg class="svg-inline--fa fa-arrow-left" onclick="location.href = 'welcome'; return false;" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
-                    <path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path>
-                </svg>
-            </div>
-        </div>
-        <div>
-        </div>
-        </div>
-    </section>
-    <?php
-$today = date("Y-m-d");
-$month = date("M");
-$weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-// Get all unique event dates and find min/max date
-$eventDates = [];
-foreach ($EventList as $row) {
-    $eventDates[] = date("Y-m-d", strtotime($row['event_date']));
-}
-$eventDates = array_unique($eventDates);
-sort($eventDates);
-
-// Generate full date range
-$startDate = $eventDates[0] ?? $today;
-$endDate = end($eventDates) ?: $today;
-
-$dateRange = [];
-$currentDate = $startDate;
-while (strtotime($currentDate) <= strtotime($endDate)) {
-    $dateRange[] = $currentDate;
-    $currentDate = date("Y-m-d", strtotime("+1 day", strtotime($currentDate)));
-}
-?>
-
-<!-- Date Selection -->
-<br>
-
-<div class="d-flex align-items-center bg-white shadow-sm p-2 rounded" style="display: flex;overflow-x: scroll;white-space: nowrap;
-    scroll-behavior: smooth;-ms-overflow-style: none;scrollbar-width: none;padding-top:10px;">
-
-    <?php foreach ($dateRange as $date) {
-        $day = $weekDays[date("w", strtotime($date))];
-        $displayDate = date("d", strtotime($date));
-
-        // Set default selected date as today
-        $bgColor = ($date == $today) ? "bg-success text-white selected-date" : "text-secondary";
-    ?>
-        <div class="text-center date-box <?= $bgColor ?> mx-1 px-3 py-2"
-            style="border-radius: 8px;font-size: 12px; cursor: pointer;"
-            data-date="<?= $date ?>"
-            onclick="filterEvents('<?= $date ?>', this)">
-            <small class="text-uppercase fw-bold"><?= $day ?></small>
-            <h6 class="m-0 fw-bold" style="font-size: 16px;"><?= $displayDate ?></h6>
-            <small class="m-0 fw-bold"><?= $month ?></small>
-        </div>
-    <?php } ?>
-</div>
-
 
 <style>
 /* Wrapper to align event time & countdown properly */
@@ -268,6 +204,75 @@ while (strtotime($currentDate) <= strtotime($endDate)) {
 
 </style>
 
+<main>
+
+    <?php $this->load->view('frontend/first-visit'); ?>
+    <section id="home-header">
+        <div class="flex flex-row space-between flex-column">
+            <div class="">
+                <svg class="svg-inline--fa fa-arrow-left" onclick="location.href = 'welcome'; return false;" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
+                    <path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path>
+                </svg>
+            </div>
+        </div>
+        <div>
+        </div>
+        </div>
+    </section>
+
+    <?php
+$today = date("Y-m-d");
+$month = date("M");
+$weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// Get all unique event dates and find min/max date
+$eventDates = [];
+foreach ($EventList as $row) {
+    $eventDates[] = date("Y-m-d", strtotime($row['event_date']));
+}
+$eventDates = array_unique($eventDates);
+sort($eventDates);
+
+// Generate full date range
+$startDate = $eventDates[0] ?? $today;
+$endDate = end($eventDates) ?: $today;
+
+$dateRange = [];
+$currentDate = $startDate;
+while (strtotime($currentDate) <= strtotime($endDate)) {
+    $dateRange[] = $currentDate;
+    $currentDate = date("Y-m-d", strtotime("+1 day", strtotime($currentDate)));
+}
+?>
+
+<!-- Date Selection -->
+<br>
+<div class="d-flex align-items-center bg-white shadow-sm p-2 rounded" style="display: flex;overflow-x: scroll;white-space: nowrap;
+    scroll-behavior: smooth;-ms-overflow-style: none;scrollbar-width: none;padding-top:10px;">
+
+    <?php
+    foreach ($dateRange as $date) {
+        // ✅ Skip past dates (Only show today and future dates)
+        if ($date < $today) {
+            continue;
+        }
+
+        $day = $weekDays[date("w", strtotime($date))];
+        $displayDate = date("d", strtotime($date));
+
+        // ✅ Highlight today by default
+        $bgColor = ($date == $today) ? "bg-success text-white selected-date" : "text-secondary";
+    ?>
+        <div class="text-center date-box <?= $bgColor ?> mx-1 px-3 py-2"
+            style="border-radius: 8px;font-size: 12px; cursor: pointer;"
+            data-date="<?= $date ?>"
+            onclick="filterEvents('<?= $date ?>', this)">
+            <small class="text-uppercase fw-bold"><?= $day ?></small>
+            <h6 class="m-0 fw-bold" style="font-size: 16px;"><?= $displayDate ?></h6>
+            <small class="m-0 fw-bold"><?= $month ?></small>
+        </div>
+    <?php } ?>
+</div>
 
 <!-- Event Cards -->
 <div id="eventContainer" style="align-items:stretch;padding:10px;">
@@ -316,10 +321,10 @@ foreach ($EventList as $row) {
 <div class="time-countdown-wrapper">
 
     <!-- Event Time (Left) -->
-    <button class="btn btn-light text-success border event-time-btn">
+    <button class="btn btn-light text-success border event-time-btn"
+        onclick="location.href='SeatBooking?id=<?= $row['id']; ?>'">
         <?= date("h:i A", strtotime($row['event_time'])); ?>
     </button>
-
     <!-- Countdown Timer (Right) -->
     <div class="countdown-container text-center" data-event-timestamp="<?= $eventTimestamp ?>">
         <div class="d-flex align-items-center">
@@ -405,8 +410,6 @@ foreach ($EventList as $row) {
         </div>
     </div>
 </div>
-
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var infoModal = document.getElementById('infoModal');
