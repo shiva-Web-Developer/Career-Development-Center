@@ -185,6 +185,7 @@ while (strtotime($currentDate) <= strtotime($endDate)) {
 
 <!-- Date Selection -->
 <br>
+
 <div class="d-flex align-items-center bg-white shadow-sm p-2 rounded" style="display: flex;overflow-x: scroll;white-space: nowrap;
     scroll-behavior: smooth;-ms-overflow-style: none;scrollbar-width: none;padding-top:10px;">
 
@@ -206,17 +207,84 @@ while (strtotime($currentDate) <= strtotime($endDate)) {
     <?php } ?>
 </div>
 
+
+<style>
+/* Wrapper to align event time & countdown properly */
+.time-countdown-wrapper {
+    display: flex;
+    align-items: center; /* Align vertically */
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Event Time Button */
+.event-time-btn {
+    width: 110px;
+    font-size: 16px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px; /* Increase height */
+}
+
+/* Countdown Timer Background */
+.countdown-container {
+    display: flex;
+    align-items: center;
+    background: #359735;
+    color: white;
+    padding: 10px 5px; /* More padding */
+    border-radius: 5px; /* Make it softer */
+    height: 43px; /* Increase height to match button */
+}
+
+/* Countdown Box */
+.countdown-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #359735;
+    color: white;
+    /* padding: 5px 8px;  */
+    border-radius: 6px;
+    /* min-width: 50px;  */
+    text-align: center;
+    /* font-size: 16px;  */
+    /* font-weight: bold; */
+    /* height: 100%; */
+}
+
+/* Countdown Separator */
+.countdown-separator {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    padding: 0 8px; /* More spacing */
+    align-self: center;
+}
+
+
+</style>
+
+
 <!-- Event Cards -->
 <div id="eventContainer" style="align-items:stretch;padding:10px;">
-    <?php
-    $hasTodayEvents = false;
-    foreach ($EventList as $row) {
-        $eventDate = date("Y-m-d", strtotime($row['event_date']));
-        $displayStyle = ($eventDate == $today) ? "block" : "none"; // Show only today's events initially
-        if ($eventDate == $today) {
-            $hasTodayEvents = true;
-        }
-    ?>
+
+<?php
+$hasTodayEvents = false;
+foreach ($EventList as $row) {
+    $eventDate = date("Y-m-d", strtotime($row['event_date']));  // Format date (YYYY-MM-DD)
+    $eventTime = date("H:i:s", strtotime($row['event_time']));  // Format time (HH:MM:SS)
+    $eventTimestamp = strtotime("$eventDate $eventTime");       // Combine and convert to timestamp
+
+    $displayStyle = ($eventDate == $today) ? "block" : "none"; // Show only today's events initially
+    if ($eventDate == $today) {
+        $hasTodayEvents = true;
+    }
+?>
+
         <div class="event-card card p-2 shadow-sm mb-1" data-event-date="<?= $eventDate ?>" style="border-radius: 1rem !important;padding: 1.1rem !important; display: <?= $displayStyle ?>;">
             <!-- Header Section -->
             <div class="d-flex justify-content-between align-items-center">
@@ -242,12 +310,43 @@ while (strtotime($currentDate) <= strtotime($endDate)) {
                 <strong>Event ID:</strong> <?= $row['event_id']; ?>
             </p>
 
-            <!-- Show Timings -->
-            <div class="d-flex flex-wrap">
-                <button class="btn btn-light text-success border m-1" style="width: 105px; font-size: 14px; border-radius: 0;">
-                    <?= date("h:i A", strtotime($row['event_time'])); ?>
-                </button>
+
+
+<!-- Wrapper for event time & countdown -->
+<div class="time-countdown-wrapper">
+
+    <!-- Event Time (Left) -->
+    <button class="btn btn-light text-success border event-time-btn">
+        <?= date("h:i A", strtotime($row['event_time'])); ?>
+    </button>
+
+    <!-- Countdown Timer (Right) -->
+    <div class="countdown-container text-center" data-event-timestamp="<?= $eventTimestamp ?>">
+        <div class="d-flex align-items-center">
+            <div class="countdown-box">
+                <span class="days">00</span> <small>D</small>
             </div>
+            <span class="countdown-separator">:</span>
+            <div class="countdown-box">
+                <span class="hours">00</span> <small>H</small>
+            </div>
+            <span class="countdown-separator">:</span>
+            <div class="countdown-box">
+                <span class="minutes">00</span> <small>M</small>
+            </div>
+            <span class="countdown-separator">:</span>
+            <div class="countdown-box">
+                <span class="seconds">00</span> <small>S</small>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
         </div>
     <?php } ?>
 
@@ -262,26 +361,6 @@ while (strtotime($currentDate) <= strtotime($endDate)) {
     </div>
 
 </main>
-
-<!-- Modal -->
-<!-- <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="infoModalLabel">Event Details</h5>
-            </div>
-            <div class="modal-body">
-                <p><strong>Event ID:</strong> <span id="eventId"></span></p>
-                <p><strong>Date & Time:</strong> <span id="eventDate"></span> <span id="eventTime"></span> </p>
-                <p><strong>Title:</strong> <span id="eventName"></span></p>
-                <p><strong>Description:</strong> <span id="eventDsc"></span></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div> -->
 
 <!-- Modal -->
 <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
@@ -388,6 +467,38 @@ function filterEvents(selectedDate, clickedElement) {
     document.getElementById('noEventsMessage').style.display = hasEvents ? 'none' : 'block';
 }
 </script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function updateCountdown() {
+        document.querySelectorAll(".countdown-container").forEach(container => {
+            let eventTimestamp = parseInt(container.getAttribute("data-event-timestamp")) * 1000; // Convert to milliseconds
+            let now = new Date().getTime();
+            let timeLeft = eventTimestamp - now;
+
+            if (timeLeft > 0) {
+                let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                container.querySelector(".days").innerText = String(days).padStart(2, '0');
+                container.querySelector(".hours").innerText = String(hours).padStart(2, '0');
+                container.querySelector(".minutes").innerText = String(minutes).padStart(2, '0');
+                container.querySelector(".seconds").innerText = String(seconds).padStart(2, '0');
+            } else {
+                container.innerHTML = "<small class='text-danger'>Event Started</small>";
+            }
+        });
+    }
+
+    // Update countdown every second
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+});
+</script>
+
 
 <!-- Bootstrap 5 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
