@@ -84,7 +84,6 @@ $route['getStudentDetails'] = 'welcome/getStudentDetails';
 $route['SavePayment'] = 'welcome/SavePayment';
 $route['SeatBooking'] = 'welcome/seatbooking';
 $route['SeatBooking/save'] = 'Welcome/saveSeat';
-
 $route['EventDetails'] = 'Welcome/EventDetails';
 
 

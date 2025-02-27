@@ -1506,9 +1506,10 @@ class Welcome extends CI_Controller
 		if (!empty($seating_plans)) {
 			$data['planId'] = $seating_plans[0]['id']; // ✅ Use index 0 since it's an array of rows
 		} else {
-			echo "No seating plans found!";
-			return;
+			echo "<script>alert('No seating plans found!'); window.history.back();</script>";
+			exit;
 		}
+
 
 		$sql = "SELECT seat_id FROM `saved_seats` WHERE event_id = $eventId"; // Prevent SQL Injection
 		$bookedSeatsData = $this->Admin_model->getAllData($sql);
@@ -1562,6 +1563,7 @@ class Welcome extends CI_Controller
 		$this->load->view('frontend/common/page-builder', $data);
 	}
 
+	// SAVED SEATS AND PAYMENTS
 	public function SavePayment()
 	{
 		header('Content-Type: application/json');
@@ -1571,27 +1573,63 @@ class Welcome extends CI_Controller
 
 		$postData = $this->input->post();
 
-		if (!$postData || !isset($postData['eventId']) || !isset($postData['paymentId']) || !isset($postData['amount']) || !isset($postData['student_id'])) {
+		// Validate required fields
+		if (!$postData || !isset($postData['eventId']) || !isset($postData['paymentId']) || !isset($postData['amount']) || !isset($postData['student_id']) || !isset($postData['seatNumber'])) {
 			echo json_encode(["status" => "error", "message" => "Invalid payment data"]);
 			exit;
 		}
 
-		$data = [
-			'event_id' => $postData['eventId'],
-			'payment_id' => $postData['paymentId'],
-			'student_id' => $postData['student_id'],
-			'amount' => $postData['amount'] / 100, // Convert back to INR
-			'status' => "Success",
-			'created_at' => date('Y-m-d H:i:s')
-		];
-		$insert = $this->Admin_model->saveData('payments', $data);
+		// Generate a unique booking ID
+		$booking_id = 'CDC' . time(); // CDC + timestamp to make it unique
 
-		if ($insert) {
-			echo json_encode(["status" => "success"]);
+		// Save Seat Booking FIRST
+		$seatData = [
+			'booking_id' => $booking_id,
+			'event_id' => $postData['eventId'],
+			'stu_id' => $postData['student_id'],
+			'seat_id' => $postData['seatNumber'], // Store the seat number
+			'booking_date' => date('Y-m-d H:i:s'),
+			'is_active' => 1, // Store as active
+			'detail_qr' => 'assets/img/QR.png', // Static QR image
+			'created_at' => date('Y-m-d H:i:s'),
+			'updated_at' => date('Y-m-d H:i:s')
+		];
+
+		$this->db->insert('saved_seats', $seatData);
+		$savedSeatId = $this->db->insert_id(); // Get last inserted seat ID
+
+		if ($savedSeatId) { // ✅ Ensure the seat was inserted successfully
+
+			// Now Save Payment AFTER Seat Booking
+			$paymentData = [
+				'event_id' => $postData['eventId'],
+				'payment_id' => $postData['paymentId'],
+				'amount' => $postData['amount'] / 100, // Convert back to INR
+				'status' => "Success",
+				'created_at' => date('Y-m-d H:i:s')
+			];
+
+			$this->db->insert('payments', $paymentData);
+			$paymentId = $this->db->insert_id(); // Get last inserted payment ID
+
+			if ($paymentId) {
+
+				// ✅ Update `saved_seats` table with the `booking_id`
+				$updateDataa = ['payment_id' => $paymentId];
+				$this->db->where('id', $savedSeatId);
+				$this->db->update('saved_seats', $updateDataa);
+
+				echo json_encode(["status" => "success", "booking_id" => $booking_id, "payment_id" => $paymentId]);
+			} else {
+				echo json_encode(["status" => "error", "message" => "Payment save failed"]);
+			}
+
 		} else {
-			echo json_encode(["status" => "error", "message" => "Database save failed"]);
+			echo json_encode(["status" => "error", "message" => "Seat booking failed"]);
 		}
 	}
+
+
 
 	public function getStudentDetails()
 	{
@@ -1621,57 +1659,39 @@ class Welcome extends CI_Controller
 		}
 	}
 
-	public function saveSeat() {
-		$user_id = $_SESSION['UID'];
-		$seatNumber = $_REQUEST['selectedSeatNumber'] ?? null;
-		$planId = $_REQUEST['planId'] ?? null;
+		public function EventDetails()
+		{
+			$userid = $_SESSION['UID']; // Get user ID from session
+			$data['title'] = THE_TITLE . " - Event Details";
 
-		// Check if seat number and planId are received
-		if (!$seatNumber || !$planId) {
-			echo json_encode(["success" => false, "message" => "Invalid request parameters!"]);
-			return;
+			// Fetch the event ID properly from GET request
+			$eventId = $this->input->get('eventID');
+
+			if (!$eventId) {
+				die("Event ID is missing!"); // Stop execution if event ID is not found
+			}
+
+			// Secure Query Using Query Builder
+			$this->db->select('ss.*, el.title, el.event_date, el.event_time, el.fees, ss.detail_qr, el.image, ss.booking_id, p.point_amount');
+			$this->db->from('saved_seats ss');
+			$this->db->join('event_list el', 'ss.event_id = el.id');
+			$this->db->join('payments p', 'ss.payment_id = p.id'); // ✅ Join payments table using payment_id
+			$this->db->where('ss.event_id', $eventId);
+			$this->db->where('ss.stu_id', $userid);
+			$this->db->where('p.status', 'Success'); // ✅ Ensure payment status is "Success"
+
+			$query = $this->db->get();
+			$data['bookingDetails'] = $query->result();
+
+
+			$data['page'] = "Event Details";
+			$data['content'] = $this->load->view('frontend/SeatBooking/event-detail', $data, true);
+			$this->load->view('frontend/common/page-builder', $data);
 		}
 
-		// Load database
-		$this->load->database();
 
-		// Check if the student already has a booked seat in the same auditorium
-		$sql = "SELECT * FROM `saved_seats` WHERE is_active = 1 AND aud_id = ? AND stu_id = ?";
-		$DuplicateCheck = $this->db->query($sql, [$planId, $user_id])->row_array();
 
-		if (!empty($DuplicateCheck)) {
-			echo json_encode(["success" => false, "message" => "You have already booked a seat in this auditorium!"]);
-			return;
-		}
 
-		// Prepare data for insertion
-		$data = [
-			'seat_id' => $seatNumber,
-			'stu_id' => $user_id,
-			'aud_id' => $planId,
-			'booking_date' => date('Y-m-d H:i:s'),
-			'is_active' => 1, // Fixed typo from 'is_ative' to 'is_active'
-			'created_at' => date('Y-m-d H:i:s'),
-			'updated_at' => date('Y-m-d H:i:s')
-		];
-
-		// Insert into database
-		$insert = $this->db->insert('saved_seats', $data);
-
-		if ($insert) {
-			echo json_encode(["success" => true, "message" => "Seat $seatNumber booked successfully!"]);
-		} else {
-			echo json_encode(["success" => false, "message" => "Database insert failed."]);
-		}
-	}
-
-	function EventDetails(){
-		$id = $_SESSION['UID'];
-		$data['title'] = THE_TITLE." - Event Details";
-		$data['page'] = "Event Details";
-		$data['content'] = $this->load->view('frontend/SeatBooking/event-detail',$data, true);
-		$this->load->view('frontend/common/page-builder',$data);
-	}
 
 
 

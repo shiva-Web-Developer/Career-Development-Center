@@ -144,64 +144,68 @@
     }
 </style>
 
+
 <style>
-/* Wrapper to align event time & countdown properly */
-.time-countdown-wrapper {
-    display: flex;
-    align-items: center; /* Align vertically */
-    justify-content: space-between;
-    width: 100%;
-}
+    /* Wrapper to align event time & countdown properly */
+    .time-countdown-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
 
-/* Event Time Button */
-.event-time-btn {
-    width: 110px;
-    font-size: 16px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 50px; /* Increase height */
-}
+    /* Event Time Button */
+    .event-time-btn {
+        width: 110px;
+        font-size: 16px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 50px;
+    }
 
-/* Countdown Timer Background */
-.countdown-container {
-    display: flex;
-    align-items: center;
-    background: #359735;
-    color: white;
-    padding: 10px 5px; /* More padding */
-    border-radius: 5px; /* Make it softer */
-    height: 43px; /* Increase height to match button */
-}
+    /* Countdown Section */
+    .countdown-section {
+        text-align: center;
+    }
 
-/* Countdown Box */
-.countdown-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #359735;
-    color: white;
-    /* padding: 5px 8px;  */
-    border-radius: 6px;
-    /* min-width: 50px;  */
-    text-align: center;
-    /* font-size: 16px;  */
-    /* font-weight: bold; */
-    /* height: 100%; */
-}
+    /* Countdown Timer Background */
+    .countdown-container {
+        display: flex;
+        align-items: center;
+        background: #359735;
+        color: white;
+        padding: 10px 5px;
+        border-radius: 5px;
+        height: 43px;
+    }
 
-/* Countdown Separator */
-.countdown-separator {
-    font-size: 20px;
-    font-weight: bold;
-    color: white;
-    padding: 0 8px; /* More spacing */
-    align-self: center;
-}
+    /* Countdown Box */
+    .countdown-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #359735;
+        color: white;
+        border-radius: 6px;
+        text-align: center;
+    }
 
+    /* Countdown Separator */
+    .countdown-separator {
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        padding: 0 8px;
+        align-self: center;
+    }
 
+    /* Muted Text Styling */
+    .text-muted {
+        font-size: 14px;
+    }
 </style>
 
 <main>
@@ -221,148 +225,142 @@
     </section>
 
     <?php
-$today = date("Y-m-d");
-$month = date("M");
-$weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    $today = date("Y-m-d");
+    $month = date("M");
+    $weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-// Get all unique event dates and find min/max date
-$eventDates = [];
-foreach ($EventList as $row) {
-    $eventDates[] = date("Y-m-d", strtotime($row['event_date']));
-}
-$eventDates = array_unique($eventDates);
-sort($eventDates);
+    // Get all unique event dates and find min/max date
+    $eventDates = [];
+    foreach ($EventList as $row) {
+        $eventDates[] = date("Y-m-d", strtotime($row['event_date']));
+    }
+    $eventDates = array_unique($eventDates);
+    sort($eventDates);
 
-// Generate full date range
-$startDate = $eventDates[0] ?? $today;
-$endDate = end($eventDates) ?: $today;
+    // Generate full date range
+    $startDate = $eventDates[0] ?? $today;
+    $endDate = end($eventDates) ?: $today;
 
-$dateRange = [];
-$currentDate = $startDate;
-while (strtotime($currentDate) <= strtotime($endDate)) {
-    $dateRange[] = $currentDate;
-    $currentDate = date("Y-m-d", strtotime("+1 day", strtotime($currentDate)));
-}
-?>
+    $dateRange = [];
+    $currentDate = $startDate;
+    while (strtotime($currentDate) <= strtotime($endDate)) {
+        $dateRange[] = $currentDate;
+        $currentDate = date("Y-m-d", strtotime("+1 day", strtotime($currentDate)));
+    }
+    ?>
 
-<!-- Date Selection -->
-<br>
-<div class="d-flex align-items-center bg-white shadow-sm p-2 rounded" style="display: flex;overflow-x: scroll;white-space: nowrap;
+    <!-- Date Selection -->
+    <br>
+    <div class="d-flex align-items-center bg-white shadow-sm p-2 rounded" style="display: flex;overflow-x: scroll;white-space: nowrap;
     scroll-behavior: smooth;-ms-overflow-style: none;scrollbar-width: none;padding-top:10px;">
 
-    <?php
-    foreach ($dateRange as $date) {
-        // ✅ Skip past dates (Only show today and future dates)
-        if ($date < $today) {
-            continue;
-        }
+        <?php
+        foreach ($dateRange as $date) {
+            if ($date < $today) {
+                continue;
+            }
 
-        $day = $weekDays[date("w", strtotime($date))];
-        $displayDate = date("d", strtotime($date));
+            $day = $weekDays[date("w", strtotime($date))];
+            $displayDate = date("d", strtotime($date));
 
-        // ✅ Highlight today by default
-        $bgColor = ($date == $today) ? "bg-success text-white selected-date" : "text-secondary";
-    ?>
-        <div class="text-center date-box <?= $bgColor ?> mx-1 px-3 py-2"
-            style="border-radius: 8px;font-size: 12px; cursor: pointer;"
-            data-date="<?= $date ?>"
-            onclick="filterEvents('<?= $date ?>', this)">
-            <small class="text-uppercase fw-bold"><?= $day ?></small>
-            <h6 class="m-0 fw-bold" style="font-size: 16px;"><?= $displayDate ?></h6>
-            <small class="m-0 fw-bold"><?= $month ?></small>
-        </div>
-    <?php } ?>
-</div>
+            $bgColor = ($date == $today) ? "bg-success text-white selected-date" : "text-secondary";
+        ?>
+            <div class="text-center date-box <?= $bgColor ?> mx-1 px-3 py-2"
+                style="border-radius: 8px;font-size: 12px; cursor: pointer;"
+                data-date="<?= $date ?>"
+                onclick="filterEvents('<?= $date ?>', this)">
+                <small class="text-uppercase fw-bold"><?= $day ?></small>
+                <h6 class="m-0 fw-bold" style="font-size: 16px;"><?= $displayDate ?></h6>
+                <small class="m-0 fw-bold"><?= $month ?></small>
+            </div>
+        <?php } ?>
+    </div>
 
-<!-- Event Cards -->
-<div id="eventContainer" style="align-items:stretch;padding:10px;">
+    <!-- Event Cards -->
+    <div id="eventContainer" style="align-items:stretch;padding:10px;">
 
-<?php
-$hasTodayEvents = false;
-foreach ($EventList as $row) {
-    $eventDate = date("Y-m-d", strtotime($row['event_date']));  // Format date (YYYY-MM-DD)
-    $eventTime = date("H:i:s", strtotime($row['event_time']));  // Format time (HH:MM:SS)
-    $eventTimestamp = strtotime("$eventDate $eventTime");       // Combine and convert to timestamp
+        <?php
+        $hasTodayEvents = false;
+        foreach ($EventList as $row) {
+            $eventDate = date("Y-m-d", strtotime($row['event_date']));
+            $eventTime = date("H:i:s", strtotime($row['event_time']));
+            $eventTimestamp = strtotime("$eventDate $eventTime");
 
-    $displayStyle = ($eventDate == $today) ? "block" : "none"; // Show only today's events initially
-    if ($eventDate == $today) {
-        $hasTodayEvents = true;
-    }
-?>
+            $displayStyle = ($eventDate == $today) ? "block" : "none";
+            if ($eventDate == $today) {
+                $hasTodayEvents = true;
+            }
+        ?>
 
-        <div class="event-card card p-2 shadow-sm mb-1" data-event-date="<?= $eventDate ?>" style="border-radius: 1rem !important;padding: 1.1rem !important; display: <?= $displayStyle ?>;">
-            <!-- Header Section -->
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <h6 class="m-0" style="font-size: 14px; font-weight: bold;">
-                        <?= $row['title']; ?>
-                    </h6>
+            <div class="event-card card p-2 shadow-sm mb-1" data-event-date="<?= $eventDate ?>" style="border-radius: 1rem !important;padding: 1.1rem !important; display: <?= $displayStyle ?>;">
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <h6 class="m-0" style="font-size: 14px; font-weight: bold;">
+                            <?= $row['title']; ?>
+                        </h6>
+                    </div>
+                    <span style="cursor: pointer; font-size: 14px; color: gray;"
+                        data-bs-toggle="modal"
+                        data-bs-target="#infoModal"
+                        data-event-id="<?= $row['event_id']; ?>"
+                        data-event-dsc="<?= $row['description']; ?>"
+                        data-event-date="<?= $row['event_date']; ?>"
+                        data-event-time="<?= $row['event_time']; ?>"
+                        data-event-fees="<?= $row['fees']; ?>"
+                        data-event-name="<?= $row['title']; ?>">
+
+                        ⓘ INFO
+                    </span>
                 </div>
-                <span style="cursor: pointer; font-size: 14px; color: gray;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#infoModal"
-                    data-event-id="<?= $row['event_id']; ?>"
-                    data-event-dsc="<?= $row['description']; ?>"
-                    data-event-date="<?= $row['event_date']; ?>"
-                    data-event-time="<?= $row['event_time']; ?>"
-                    data-event-name="<?= $row['title']; ?>">
-                    ⓘ INFO
-                </span>
-            </div>
 
-            <!-- Subtitle -->
-            <p class="text-muted mb-2 mt-2" style="font-size: 12px;">
-                <strong>Event ID:</strong> <?= $row['event_id']; ?>
-            </p>
+                <!-- Subtitle -->
+                <p class="text-muted mb-1 mt-2" style="font-size: 12px;">
+                    <strong>Event ID:</strong> <?= $row['event_id']; ?>
+                    <span style="float: right;">Time Left To Start</span>
+                </p>
 
 
+                <!-- Wrapper for event time & countdown -->
+                <div class="time-countdown-wrapper">
+                    <!-- Event Time (Left) -->
+                    <button class="btn btn-light text-success border event-time-btn"
+                        onclick="location.href='SeatBooking?id=<?= $row['id']; ?>'">
+                        <?= date("h:i A", strtotime($row['event_time'])); ?>
+                    </button>
 
-<!-- Wrapper for event time & countdown -->
-<div class="time-countdown-wrapper">
+                    <!-- Countdown Timer (Right) -->
+                    <div class="countdown-section text-center">
+                        <div class="countdown-container text-center" data-event-timestamp="<?= $eventTimestamp ?>">
+                            <div class="d-flex align-items-center">
+                                <div class="countdown-box">
+                                    <span class="days">00 </span>
+                                    <small>D</small>
+                                </div>
+                                <span class="countdown-separator">:</span>
+                                <div class="countdown-box">
+                                    <span class="hours">00 </span> <small>H</small>
+                                </div>
+                                <span class="countdown-separator">:</span>
+                                <div class="countdown-box">
+                                    <span class="minutes">00 </span> <small>M</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Event Time (Left) -->
-    <button class="btn btn-light text-success border event-time-btn"
-        onclick="location.href='SeatBooking?id=<?= $row['id']; ?>'">
-        <?= date("h:i A", strtotime($row['event_time'])); ?>
-    </button>
-    <!-- Countdown Timer (Right) -->
-    <div class="countdown-container text-center" data-event-timestamp="<?= $eventTimestamp ?>">
-        <div class="d-flex align-items-center">
-            <div class="countdown-box">
-                <span class="days">00</span> <small>D</small>
             </div>
-            <span class="countdown-separator">:</span>
-            <div class="countdown-box">
-                <span class="hours">00</span> <small>H</small>
-            </div>
-            <span class="countdown-separator">:</span>
-            <div class="countdown-box">
-                <span class="minutes">00</span> <small>M</small>
-            </div>
-            <span class="countdown-separator">:</span>
-            <div class="countdown-box">
-                <span class="seconds">00</span> <small>S</small>
-            </div>
+        <?php } ?>
+
+        <!-- No Events Message Card -->
+        <div id="noEventsMessage" class="card p-3 shadow-sm text-center" style="border-radius: 1rem; display: <?= $hasTodayEvents ? 'none' : 'block'; ?>;">
+            <p class="text-muted m-0">No events available for this date.</p>
         </div>
     </div>
 
-</div>
 
-
-
-
-
-        </div>
-    <?php } ?>
-
-    <!-- No Events Message Card -->
-    <div id="noEventsMessage" class="card p-3 shadow-sm text-center" style="border-radius: 1rem; display: <?= $hasTodayEvents ? 'none' : 'block'; ?>;">
-        <p class="text-muted m-0">No events available for this date.</p>
     </div>
-</div>
-
-
-</div>
     </div>
 
 </main>
@@ -394,8 +392,17 @@ foreach ($EventList as $row) {
                     <p id="eventName" class="m-0 text-dark"></p>
                 </div>
                 <div class="mb-2">
+                    <h6 class="fw-bold text-success"><i class="fas fa-file-alt"></i> Registration Charge:</h6>
+                    <p id="eventFees" class="m-0 text-dark"></p>
+                </div>
+                <div class="mb-2">
                     <h6 class="fw-bold text-success"><i class="fas fa-align-left"></i> Description:</h6>
                     <p id="eventDsc" class="m-0 text-dark" style="text-align: justify;"></p>
+                </div>
+                <div class="mb-2">
+                    <button type="button" class="btn btn-primary" onclick="location.href='SeatBooking?id=<?= $row['id']; ?>'">
+                        Book Now
+                    </button>
                 </div>
             </div>
 
@@ -403,8 +410,7 @@ foreach ($EventList as $row) {
             <div class="modal-footer d-flex justify-content-between">
                 <small class="text-muted">Powered by CDC</small>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <!-- <i class="fas fa-times"></i> -->
-                     Close
+                    Close
                 </button>
             </div>
         </div>
@@ -421,6 +427,7 @@ foreach ($EventList as $row) {
             var eventDsc = button.getAttribute('data-event-dsc');
             var eventDate = button.getAttribute('data-event-date'); // In YYYY-MM-DD format
             var eventTime = button.getAttribute('data-event-time'); // In HH:MM:SS format
+            var eventFees = button.getAttribute('data-event-fees');
 
             // Convert Date to d-m-Y format
             let dateObj = new Date(eventDate);
@@ -439,67 +446,66 @@ foreach ($EventList as $row) {
             document.getElementById('eventDsc').textContent = eventDsc;
             document.getElementById('eventDate').textContent = formattedDate;
             document.getElementById('eventTime').textContent = formattedTime;
+            document.getElementById('eventFees').textContent = eventFees;
         });
     });
 </script>
 
 <!-- JavaScript for Filtering Events -->
 <script>
-function filterEvents(selectedDate, clickedElement) {
-    // Remove the previous selection and apply highlight to the clicked date
-    document.querySelectorAll('.date-box').forEach(box => {
-        box.classList.remove('bg-success', 'text-white', 'selected-date');
-        box.classList.add('text-secondary');
-    });
-    clickedElement.classList.remove('text-secondary');
-    clickedElement.classList.add('bg-success', 'text-white', 'selected-date');
+    function filterEvents(selectedDate, clickedElement) {
+        // Remove the previous selection and apply highlight to the clicked date
+        document.querySelectorAll('.date-box').forEach(box => {
+            box.classList.remove('bg-success', 'text-white', 'selected-date');
+            box.classList.add('text-secondary');
+        });
+        clickedElement.classList.remove('text-secondary');
+        clickedElement.classList.add('bg-success', 'text-white', 'selected-date');
 
-    let hasEvents = false;
+        let hasEvents = false;
 
-    // Hide all event cards and show only the ones matching the selected date
-    document.querySelectorAll('.event-card').forEach(eventCard => {
-        if (eventCard.getAttribute('data-event-date') === selectedDate) {
-            eventCard.style.display = 'block';
-            hasEvents = true;
-        } else {
-            eventCard.style.display = 'none';
-        }
-    });
+        // Hide all event cards and show only the ones matching the selected date
+        document.querySelectorAll('.event-card').forEach(eventCard => {
+            if (eventCard.getAttribute('data-event-date') === selectedDate) {
+                eventCard.style.display = 'block';
+                hasEvents = true;
+            } else {
+                eventCard.style.display = 'none';
+            }
+        });
 
-    // Show or hide the "No events" message
-    document.getElementById('noEventsMessage').style.display = hasEvents ? 'none' : 'block';
-}
+        // Show or hide the "No events" message
+        document.getElementById('noEventsMessage').style.display = hasEvents ? 'none' : 'block';
+    }
 </script>
 
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    function updateCountdown() {
-        document.querySelectorAll(".countdown-container").forEach(container => {
-            let eventTimestamp = parseInt(container.getAttribute("data-event-timestamp")) * 1000; // Convert to milliseconds
-            let now = new Date().getTime();
-            let timeLeft = eventTimestamp - now;
+    document.addEventListener("DOMContentLoaded", function() {
+        function updateCountdown() {
+            document.querySelectorAll(".countdown-container").forEach(container => {
+                let eventTimestamp = parseInt(container.getAttribute("data-event-timestamp")) * 1000; // Convert to milliseconds
+                let now = new Date().getTime();
+                let timeLeft = eventTimestamp - now;
 
-            if (timeLeft > 0) {
-                let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-                let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                if (timeLeft > 0) {
+                    let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                    let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
 
-                container.querySelector(".days").innerText = String(days).padStart(2, '0');
-                container.querySelector(".hours").innerText = String(hours).padStart(2, '0');
-                container.querySelector(".minutes").innerText = String(minutes).padStart(2, '0');
-                container.querySelector(".seconds").innerText = String(seconds).padStart(2, '0');
-            } else {
-                container.innerHTML = "<small class='text-danger'>Event Started</small>";
-            }
-        });
-    }
+                    container.querySelector(".days").innerText = String(days).padStart(2, '0');
+                    container.querySelector(".hours").innerText = String(hours).padStart(2, '0');
+                    container.querySelector(".minutes").innerText = String(minutes).padStart(2, '0');
+                } else {
+                    container.innerHTML = "<small class='text-danger'>Event Started</small>";
+                }
+            });
+        }
 
-    // Update countdown every second
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
-});
+        // Update countdown every minute
+        setInterval(updateCountdown, 60000);
+        updateCountdown();
+    });
 </script>
 
 

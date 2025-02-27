@@ -115,7 +115,7 @@
         .summary-row {
             display: flex;
             justify-content: space-between;
-            margin: 8px 0;
+            margin: 4px 0;
         }
 
         .summary-row p {
@@ -155,6 +155,14 @@
                 /* max-width: 90%; */
             }
         }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            margin: 0 !important;
+        }
     </style>
 </head>
 
@@ -164,98 +172,120 @@
     <!-- <div class="download-icon" onclick="downloadPDF()">⬇️</div> -->
 
     <div class="container" id="pdf-content">
-        <!-- Header: Left Image & Right Event Details -->
-        <div class="header">
-            <div class="left-section">
-                <img src="<?php echo base_url('assets/img/Event.jpg'); ?>" alt="Event Image">
+        <?php if (!empty($bookingDetails)) {
+            $booking = $bookingDetails[0]; // Assuming there's only one booking entry per user
+        ?>
+            <!-- Header: Left Image & Right Event Details -->
+            <div class="header">
+                <div class="left-section">
+                    <img src="<?php echo base_url($booking->image); ?>" alt="Event Image">
+                </div>
+                <div class="right-section">
+                    <h5><?php echo htmlspecialchars($booking->title); ?></h5>
+                    <p class="bold"><?php echo date("D, M d, h:iA", strtotime($booking->event_date)); ?></p>
+                    <p class="bold">Hera Public School</p>
+                </div>
             </div>
-            <div class="right-section">
-                <h5>T20 World Cup 2024: India Vs Pakistan</h5>
-                <p class="bold">Sun, Jun 09, 07:30PM</p>
-                <p class="bold">Hera Public School</p>
-            </div>
-        </div>
 
-        <!-- Ticket Information -->
-        <div class="ticket-info">
-            <p class="bold">Seat: CL-F12</p>
-            <div class="qr-code">
-                <img src="<?php echo base_url('assets/img/QR.png'); ?>" alt="QR Code">
+            <!-- Ticket Information -->
+            <div class="ticket-info">
+                <p class="bold">Seat: <?php echo htmlspecialchars($booking->seat_id); ?></p>
+                <div class="qr-code">
+                    <img src="<?php echo base_url($booking->detail_qr); ?>" alt="QR Code">
+                </div>
+                <p><strong>Booking ID:</strong> <?php echo htmlspecialchars($booking->booking_id); ?></p>
+                <p><small>Booking powered by <strong>CDC</strong></small></p>
             </div>
-            <p><strong>Booking ID:</strong> TDA4KHEA</p>
-            <p><small>Booking powered by <strong>CDC</strong></small></p>
-        </div>
 
-        <!-- Booking Summary -->
-        <div class="booking-summary">
-            <h5>Booking Summary</h5>
-            <div class="summary-row">
-                <p class="bold">Ticket:</p>
-                <p class="bold price">₹1000.00</p>
+            <!-- Booking Summary -->
+            <div class="booking-summary">
+                <h5>Booking Summary</h5>
+                <div class="summary-row">
+                    <p class="bold">Ticket:</p>
+                    <p class="bold price">₹
+                        <?php if (isset($booking->point_amount) && $booking->point_amount > 0) : ?>
+                            <?php echo number_format($booking->fees - $booking->point_amount, 2); ?>
+                        <?php else : ?>
+                            <?php echo number_format($booking->fees, 2); ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <?php if (isset($booking->point_amount) && $booking->point_amount > 0) : ?>
+                    <div class="summary-row">
+                        <p class="bold">Paid From Wallet:</p>
+                        <p class="bold price">₹<?php echo number_format($booking->point_amount, 2); ?></p>
+                    </div>
+                <?php endif; ?>
+                <div class="summary-row total">
+                    <p class="bold">Order Total:</p>
+                    <p style="color:red;" class="bold highlight">₹<?php echo number_format($booking->fees, 2); ?></p>
+                </div>
             </div>
-            <div class="summary-row total">
-                <p class="bold">Order Total:</p>
-                <p style="color:red;" class="bold highlight">₹1000.00</p>
+            <!-- Important Information -->
+            <div class="important-info">
+                <h5>Important Information</h5>
+                <p style="text-align:left;font-size:10px;">
+                    Wondering how to throw events that college students will actually want to attend?
+                    <br>
+                    It’s time to shift your perspective. Whether you’re an event planner.
+                </p>
             </div>
-        </div>
 
-        <!-- Important Information -->
-        <div class="important-info">
-            <h5>Important Information</h5>
-            <p style="text-align:left;font-size:10px;">Wondering how to throw events that college students will actually want to attend?
-                <br>
-                It’s time to shift your perspective. Whether you’re an event planner.
-            </p>
-        </div>
+        <?php } else { ?>
+            <p class="text-danger text-center">No Booking Details Found.</p>
+        <?php } ?>
     </div>
 
+
     <script>
-    async function downloadPDF() {
-        const { jsPDF } = window.jspdf;
-        const container = document.getElementById("pdf-content");
+        async function downloadPDF() {
+            const {
+                jsPDF
+            } = window.jspdf;
+            const container = document.getElementById("pdf-content");
 
-        // Ensure images load properly before capturing
-        const images = container.getElementsByTagName("img");
-        for (let img of images) {
-            await new Promise((resolve) => {
-                img.onload = resolve;
-                img.onerror = resolve;
-            });
-        }
-
-        html2canvas(container, {
-            scale: 2, // Ensures high-quality rendering
-            useCORS: true, // Fixes potential cross-origin issues with images
-            scrollY: -window.scrollY, // Ensures full capture of content
-        }).then(canvas => {
-            const imgData = canvas.toDataURL("image/png");
-            const pdf = new jsPDF("p", "mm", "a4");
-
-            const imgWidth = 210; // A4 width in mm
-            const pageHeight = 297; // A4 height in mm
-            let imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-            if (imgHeight > pageHeight) {
-                pdf.addImage(imgData, "PNG", 0, 0, imgWidth, pageHeight);
-                let heightLeft = imgHeight - pageHeight;
-                let position = 0;
-
-                while (heightLeft > 0) {
-                    position -= pageHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, "PNG", 0, position, imgWidth, pageHeight);
-                    heightLeft -= pageHeight;
-                }
-            } else {
-                pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+            // Ensure images load properly before capturing
+            const images = container.getElementsByTagName("img");
+            for (let img of images) {
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                });
             }
 
-            pdf.save("Booking_Confirmation.pdf");
-        }).catch(error => {
-            console.error("PDF Generation Error:", error);
-        });
-    }
-</script>
+            html2canvas(container, {
+                scale: 2, // Ensures high-quality rendering
+                useCORS: true, // Fixes potential cross-origin issues with images
+                scrollY: -window.scrollY, // Ensures full capture of content
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                const pdf = new jsPDF("p", "mm", "a4");
+
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                let imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                if (imgHeight > pageHeight) {
+                    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, pageHeight);
+                    let heightLeft = imgHeight - pageHeight;
+                    let position = 0;
+
+                    while (heightLeft > 0) {
+                        position -= pageHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, "PNG", 0, position, imgWidth, pageHeight);
+                        heightLeft -= pageHeight;
+                    }
+                } else {
+                    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+                }
+
+                pdf.save("Booking_Confirmation.pdf");
+            }).catch(error => {
+                console.error("PDF Generation Error:", error);
+            });
+        }
+    </script>
 
 
 
